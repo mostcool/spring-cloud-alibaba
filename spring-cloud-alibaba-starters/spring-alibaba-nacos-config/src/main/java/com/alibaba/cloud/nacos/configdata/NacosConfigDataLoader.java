@@ -18,6 +18,7 @@ package com.alibaba.cloud.nacos.configdata;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -94,10 +95,12 @@ public class NacosConfigDataLoader implements ConfigDataLoader<NacosConfigDataRe
 			NacosPropertySource propertySource = new NacosPropertySource(propertySources,
 					config.getGroup(), config.getDataId(), new Date(),
 					config.isRefreshEnabled());
+			propertySource.setSuffix(config.getSuffix());
 
 			NacosPropertySourceRepository.collectNacosPropertySource(propertySource);
 
-			return new ConfigData(propertySources, getOptions(context, resource));
+			return new ConfigData(Collections.singletonList(propertySource),
+					getOptions(context, resource));
 		}
 		catch (Exception e) {
 			log.error("Error getting properties from nacos: " + resource, e);
@@ -156,6 +159,11 @@ public class NacosConfigDataLoader implements ConfigDataLoader<NacosConfigDataRe
 				dataId, group);
 		if (config == null) {
 			config = configService.getConfig(dataId, group, timeout);
+		}
+		else {
+			log.debug(String.format(
+					"[Nacos Config] Load config from snapshot[dataId=%s, group=%s]",
+					dataId, group));
 		}
 		logLoadInfo(group, dataId, config);
 		// fixed issue: https://github.com/alibaba/spring-cloud-alibaba/issues/2906 .
